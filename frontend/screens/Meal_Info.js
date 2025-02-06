@@ -8,44 +8,38 @@ import {
   ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import Meal_Recommendation from './Meal_Recommendation';
 
 const MealInfo = () => {
   const navigation = useNavigation();
 
   // Hardcoded options
-  const dietaryRestrictions = ['Vegetarian', 'Vegan', 'Gluten-Free', 'Keto'];
-  const cuisinePreferences = ['Italian', 'Mexican', 'Chinese', 'Indian'];
-  const allergens = ['Peanuts', 'Dairy', 'Shellfish', 'Soy'];
+  const dietaryRestrictions = ['Weight Gain', 'Weight Loss'];
+  const allergens = [
+    'Milk',
+    'Soya',
+    'Nuts',
+    'Cereal containing gluten',
+    'None',
+  ];
 
   // State for selected options
   const [selectedRestrictions, setSelectedRestrictions] = useState({});
-  const [selectedCuisines, setSelectedCuisines] = useState({});
   const [selectedAllergens, setSelectedAllergens] = useState({});
 
   // Handle checkbox toggle
   const handleCheckboxToggle = (category, item) => {
-    switch (category) {
-      case 'restrictions':
-        setSelectedRestrictions((prevState) => ({
-          ...prevState,
-          [item]: !prevState[item],
-        }));
-        break;
-      case 'cuisines':
-        setSelectedCuisines((prevState) => ({
-          ...prevState,
-          [item]: !prevState[item],
-        }));
-        break;
-      case 'allergens':
-        setSelectedAllergens((prevState) => ({
-          ...prevState,
-          [item]: !prevState[item],
-        }));
-        break;
-      default:
-        break;
+    if (category === 'restrictions') {
+      // If one restriction is selected, unselect the other
+      setSelectedRestrictions((prevState) => ({
+        [item]: !prevState[item], // Toggle selected option
+        ...(item === 'Weight Gain' && prevState['Weight Loss'] && { 'Weight Loss': false }),
+        ...(item === 'Weight Loss' && prevState['Weight Gain'] && { 'Weight Gain': false }),
+      }));
+    } else if (category === 'allergens') {
+      setSelectedAllergens((prevState) => ({
+        ...prevState,
+        [item]: !prevState[item],
+      }));
     }
   };
 
@@ -55,12 +49,7 @@ const MealInfo = () => {
       restrictions: Object.keys(selectedRestrictions).filter(
         (key) => selectedRestrictions[key]
       ),
-      cuisines: Object.keys(selectedCuisines).filter(
-        (key) => selectedCuisines[key]
-      ),
-      allergens: Object.keys(selectedAllergens).filter(
-        (key) => selectedAllergens[key]
-      ),
+      allergens: Object.keys(selectedAllergens).filter((key) => selectedAllergens[key]),
     };
 
     try {
@@ -80,7 +69,6 @@ const MealInfo = () => {
   // Clear form inputs
   const handleClear = () => {
     setSelectedRestrictions({});
-    setSelectedCuisines({});
     setSelectedAllergens({});
   };
 
@@ -106,29 +94,8 @@ const MealInfo = () => {
                   <View
                     style={[
                       styles.checkbox,
+                      { borderRadius: 50 }, // Make the checkbox circular
                       selectedRestrictions[item] && styles.checkboxSelected,
-                    ]}
-                  />
-                  <Text style={styles.checkboxText}>{item}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          {/* Cuisine Preferences */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Cuisine Preferences:</Text>
-            <View style={styles.checkboxContainer}>
-              {cuisinePreferences.map((item) => (
-                <TouchableOpacity
-                  key={item}
-                  style={styles.checkboxRow}
-                  onPress={() => handleCheckboxToggle('cuisines', item)}
-                >
-                  <View
-                    style={[
-                      styles.checkbox,
-                      selectedCuisines[item] && styles.checkboxSelected,
                     ]}
                   />
                   <Text style={styles.checkboxText}>{item}</Text>
@@ -150,6 +117,7 @@ const MealInfo = () => {
                   <View
                     style={[
                       styles.checkbox,
+                      { borderRadius: 4 }, // Keep the allergens checkboxes square
                       selectedAllergens[item] && styles.checkboxSelected,
                     ]}
                   />
@@ -225,7 +193,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#fff',
     marginRight: 10,
-    borderRadius: 4,
   },
   checkboxSelected: {
     backgroundColor: '#34C759',
