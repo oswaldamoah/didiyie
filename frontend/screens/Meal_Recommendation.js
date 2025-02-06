@@ -1,30 +1,54 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Image } from 'react-native';
 
 const MealRecommendation = ({ route }) => {
-  // Destructure recommendedDishes with a fallback empty array to avoid destructuring error
-  const { recommendedDishes = [] } = route.params || {};
+  // Default to empty recommendedDishes if none are passed
+  const recommendedDishes = route?.params?.recommendedDishes ?? [];
+  
+  // State for all dishes
+  const [allDishes, setAllDishes] = useState([]);
+
+  // Fetch all dishes if none are passed
+  useEffect(() => {
+    if (recommendedDishes.length === 0) {
+      const fetchAllDishes = async () => {
+        try {
+          const response = await fetch('http://localhost:3000/api/dishes'); // Example endpoint to fetch all dishes
+          const dishes = await response.json();
+          setAllDishes(dishes);
+        } catch (error) {
+          console.error('Error fetching all dishes:', error);
+        }
+      };
+      fetchAllDishes();
+    }
+  }, [recommendedDishes]);
+
+  // Placeholder image for dishes without images
+  const placeholderImage = 'https://via.placeholder.com/200';
 
   // Function to render each dish
   const renderDish = ({ item }) => (
     <View style={styles.dishContainer}>
-      <Image source={{ uri: item.image_url }} style={styles.dishImage} />
+      <Image source={{ uri: item.image_url || placeholderImage }} style={styles.dishImage} />
       <Text style={styles.dishName}>{item.name}</Text>
-      <Text style={styles.dishCuisine}>{item.cuisine}</Text>
       <Text style={styles.dishDescription}>{item.description}</Text>
     </View>
   );
 
+  // If there are no recommended dishes, show all dishes
+  const dishesToDisplay = recommendedDishes.length > 0 ? recommendedDishes : allDishes;
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Recommended Dishes</Text>
-      {recommendedDishes.length === 0 ? (
+      {dishesToDisplay.length === 0 ? (
         <Text style={styles.noDishesText}>No recommended dishes available.</Text>
       ) : (
         <FlatList
-          data={recommendedDishes}
+          data={dishesToDisplay}
           renderItem={renderDish}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
           contentContainerStyle={styles.list}
         />
       )}
@@ -49,9 +73,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 16,
     color: '#888',
+    marginTop: 20,
   },
   list: {
-    marginBottom: 20,
+    paddingBottom: 20,
   },
   dishContainer: {
     marginBottom: 20,
@@ -60,6 +85,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 15,
     backgroundColor: '#f9f9f9',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
   },
   dishImage: {
     width: '100%',
@@ -71,10 +100,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
-  },
-  dishCuisine: {
-    fontSize: 16,
-    color: '#777',
+    marginBottom: 5,
   },
   dishDescription: {
     fontSize: 14,
